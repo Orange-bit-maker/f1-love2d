@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>F1 Browser Game</title>
+  <style>
+    body { margin: 0; background: #1a1a1a; display: flex; justify-content: center; align-items: center; height: 100vh; color: white; font-family: sans-serif; overflow: hidden; }
+    canvas { border: 3px solid #444; background: #2e7d32; }
+  </style>
+</head>
+<body>
+  <canvas id="game" width="800" height="600"></canvas>
+  <script>
+    const canvas = document.getElementById("game");
+    const ctx = canvas.getContext("2d");
+
+    const car = { x: 400, y: 500, angle: 0, speed: 0, maxSpeed: 7, accel: 0.15, friction: 0.06, turn: 0.05 };
+    const keys = {};
+    window.addEventListener("keydown", e => keys[e.key] = true);
+    window.addEventListener("keyup", e => keys[e.key] = false);
+
+    function drawTrack() {
+      // Outer asphalt oval
+      ctx.fillStyle = "#333333";
+      ctx.beginPath();
+      ctx.roundRect(80, 70, 640, 460, 140);
+      ctx.fill();
+      ctx.lineWidth = 6;
+      ctx.strokeStyle = "#ffffff";
+      ctx.stroke();
+
+      // Inner grass island
+      ctx.fillStyle = "#2e7d32";
+      ctx.beginPath();
+      ctx.roundRect(210, 190, 380, 220, 70);
+      ctx.fill();
+      ctx.stroke();
+
+      // Start/Finish line
+      ctx.fillStyle = "#ffffff";
+      ctx.fillRect(395, 410, 10, 120);
+    }
+
+    function update() {
+      if (keys["ArrowUp"] || keys["w"]) car.speed = Math.min(car.speed + car.accel, car.maxSpeed);
+      else if (keys["ArrowDown"] || keys["s"]) car.speed = Math.max(car.speed - car.accel, -car.maxSpeed / 2);
+      else car.speed *= (1 - car.friction);
+
+      if (Math.abs(car.speed) > 0.2) {
+        const dir = car.speed > 0 ? 1 : -1;
+        if (keys["ArrowLeft"] || keys["a"]) car.angle -= car.turn * dir;
+        if (keys["ArrowRight"] || keys["d"]) car.angle += car.turn * dir;
+      }
+
+      car.x += Math.cos(car.angle) * car.speed;
+      car.y += Math.sin(car.angle) * car.speed;
+    }
+
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      drawTrack();
+
+      // Draw F1 Car
+      ctx.save();
+      ctx.translate(car.x, car.y);
+      ctx.rotate(car.angle);
+      ctx.fillStyle = "#e53935"; // Red F1 chassis
+      ctx.fillRect(-18, -9, 36, 18);
+      ctx.fillStyle = "#ffffff"; // Front wing
+      ctx.fillRect(14, -11, 5, 22);
+      ctx.fillStyle = "#111111"; // Tires
+      ctx.fillRect(-14, -12, 8, 3);
+      ctx.fillRect(-14, 9, 8, 3);
+      ctx.fillRect(6, -12, 8, 3);
+      ctx.fillRect(6, 9, 8, 3);
+      ctx.restore();
+
+      // HUD
+      ctx.fillStyle = "white";
+      ctx.font = "18px sans-serif";
+      ctx.fillText("Speed: " + Math.round(Math.abs(car.speed) * 48) + " km/h", 20, 30);
+      ctx.fillText("Controls: Arrow Keys or WASD", 20, 55);
+    }
+
+    function loop() {
+      update();
+      draw();
+      requestAnimationFrame(loop);
+    }
+    loop();
+  </script>
+</body>
+</html>
